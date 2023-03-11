@@ -1,15 +1,17 @@
 package guru.sfg.beer.inventory.service.web.mappers;
 
 import guru.sfg.beer.inventory.service.domain.BeerInventory;
+import guru.sfg.beer.inventory.service.domain.BeerInventory.BeerInventoryBuilder;
 import guru.sfg.beer.inventory.service.web.model.BeerInventoryDto;
+import guru.sfg.beer.inventory.service.web.model.BeerInventoryDto.BeerInventoryDtoBuilder;
 import javax.annotation.processing.Generated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-03-11T14:12:11+0530",
-    comments = "version: 1.5.3.Final, compiler: javac, environment: Java 17.0.6 (Private Build)"
+    date = "2023-03-11T16:38:03+0530",
+    comments = "version: 1.3.0.Final, compiler: javac, environment: Java 17.0.6 (Private Build)"
 )
 @Component
 public class BeerInventoryMapperImpl implements BeerInventoryMapper {
@@ -23,7 +25,7 @@ public class BeerInventoryMapperImpl implements BeerInventoryMapper {
             return null;
         }
 
-        BeerInventory.BeerInventoryBuilder beerInventory = BeerInventory.builder();
+        BeerInventoryBuilder beerInventory = BeerInventory.builder();
 
         beerInventory.id( beerInventoryDTO.getId() );
         beerInventory.createdDate( dateMapper.asTimestamp( beerInventoryDTO.getCreatedDate() ) );
@@ -41,7 +43,7 @@ public class BeerInventoryMapperImpl implements BeerInventoryMapper {
             return null;
         }
 
-        BeerInventoryDto.BeerInventoryDtoBuilder beerInventoryDto = BeerInventoryDto.builder();
+        BeerInventoryDtoBuilder beerInventoryDto = BeerInventoryDto.builder();
 
         beerInventoryDto.id( beerInventory.getId() );
         beerInventoryDto.createdDate( dateMapper.asOffsetDateTime( beerInventory.getCreatedDate() ) );
