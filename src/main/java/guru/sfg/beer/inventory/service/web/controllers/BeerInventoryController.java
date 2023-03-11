@@ -28,6 +28,10 @@ public class BeerInventoryController {
     List<BeerInventoryDto> listBeersById(@PathVariable UUID beerId){
         log.debug("Finding Inventory for beerId:" + beerId);
 
+        beerInventoryRepository.findAllByBeerId(beerId).forEach(e -> log.info("quantityOnHnad ->{}",e.getQuantityOnHand()));
+
+        log.debug("size {}",beerInventoryRepository.findAllByBeerId(beerId).size());
+
         return beerInventoryRepository.findAllByBeerId(beerId)
                 .stream()
                 .map(beerInventoryMapper::beerInventoryToBeerInventoryDto)
