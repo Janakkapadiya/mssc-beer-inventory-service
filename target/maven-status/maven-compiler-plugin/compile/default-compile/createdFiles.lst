@@ -1,4 +1,5 @@
 guru/sfg/beer/inventory/service/web/mappers/BeerInventoryMapper.class
+guru/sfg/beer/inventory/service/config/JmsConfig.class
 guru/sfg/beer/inventory/service/repositories/BeerInventoryRepository.class
 guru/sfg/beer/inventory/service/domain/BeerInventory.class
 guru/sfg/beer/inventory/service/web/controllers/BeerInventoryController.class
