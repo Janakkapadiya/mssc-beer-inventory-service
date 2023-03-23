@@ -15,29 +15,56 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 @Service
 public class AllocationServiceImpl implements AllocationService {
+
     private final BeerInventoryRepository beerInventoryRepository;
 
     @Override
     public Boolean allocateOrder(BeerOrderDto beerOrderDto) {
-
         log.debug("Allocating OrderId: " + beerOrderDto.getId());
 
-        AtomicInteger totalOrder = new AtomicInteger();
+        AtomicInteger totalOrdered = new AtomicInteger();
         AtomicInteger totalAllocated = new AtomicInteger();
 
         beerOrderDto.getBeerOrderLines().forEach(beerOrderLine -> {
-            if ((beerOrderLine.getOrderQuantity() == null ? 0 : beerOrderLine.getOrderQuantity())
-                    - (beerOrderLine.getQuantityAllocated() == null ? 0 : beerOrderLine.getQuantityAllocated()) > 0) {
-                allocatedBeerOrderLine(beerOrderLine);
+            if ((((beerOrderLine.getOrderQuantity() != null ? beerOrderLine.getOrderQuantity() : 0)
+                    - (beerOrderLine.getQuantityAllocated() != null ? beerOrderLine.getQuantityAllocated() : 0)) > 0)) {
+                allocateBeerOrderLine(beerOrderLine);
             }
-            totalOrder.set(totalOrder.get() + beerOrderLine.getOrderQuantity());
-            totalAllocated.set(totalAllocated.get() + (beerOrderLine.getQuantityAllocated() == null ? 0
-                    : beerOrderLine.getQuantityAllocated()));
+            totalOrdered.set(totalOrdered.get() + beerOrderLine.getOrderQuantity());
+            totalAllocated.set(totalAllocated.get() + (beerOrderLine.getQuantityAllocated() != null ? beerOrderLine.getQuantityAllocated() : 0));
         });
 
-        log.debug("Total Ordered: " + totalOrder.get() + "Total Allocated: " + totalAllocated.get());
+        log.debug("Total Ordered: " + totalOrdered.get() + " Total Allocated: " + totalAllocated.get());
 
-        return totalAllocated.get() == totalOrder.get();
+        return totalOrdered.get() == totalAllocated.get();
+    }
+
+    private void allocateBeerOrderLine(BeerOrderLineDto beerOrderLine) {
+        List<BeerInventory> beerInventoryList = beerInventoryRepository.findAllByUpc(beerOrderLine.getUpc());
+
+        beerInventoryList.forEach(beerInventory -> {
+            int inventory = (beerInventory.getQuantityOnHand() == null) ? 0 : beerInventory.getQuantityOnHand();
+            int orderQty = (beerOrderLine.getOrderQuantity() == null) ? 0 : beerOrderLine.getOrderQuantity();
+            int allocatedQty = (beerOrderLine.getQuantityAllocated() == null) ? 0 : beerOrderLine.getQuantityAllocated();
+            int qtyToAllocate = orderQty - allocatedQty;
+
+            if (inventory >= qtyToAllocate) { // full allocation
+                inventory = inventory - qtyToAllocate;
+                beerOrderLine.setQuantityAllocated(orderQty);
+                beerInventory.setQuantityOnHand(inventory);
+
+                beerInventoryRepository.save(beerInventory);
+            } else if (inventory > 0) { //partial allocation
+                beerOrderLine.setQuantityAllocated(allocatedQty + inventory);
+                beerInventory.setQuantityOnHand(0);
+
+            }
+
+            if (beerInventory.getQuantityOnHand() == 0) {
+                beerInventoryRepository.delete(beerInventory);
+            }
+        });
+
     }
 
     @Override
@@ -52,31 +79,6 @@ public class AllocationServiceImpl implements AllocationService {
             BeerInventory savedInventory = beerInventoryRepository.save(beerInventory);
 
             log.debug("Saved Inventory for beer upc: " + savedInventory.getUpc() + " inventory id: " + savedInventory.getId());
-        });
-    }
-
-    private void allocatedBeerOrderLine(BeerOrderLineDto beerOrderLineDto) {
-        List<BeerInventory> beerInventories = beerInventoryRepository.findAllByUpc(beerOrderLineDto.getUpc());
-
-        beerInventories.forEach(beerInventory -> {
-            int quantityOnHand = (beerInventory.getQuantityOnHand() == null) ? 0 : beerInventory.getQuantityOnHand();
-            int orderQuantity = beerOrderLineDto.getOrderQuantity() == null ? 0 : beerOrderLineDto.getOrderQuantity();
-            int allocatedQuantity = beerOrderLineDto.getQuantityAllocated() == null ? 0 : beerOrderLineDto.getQuantityAllocated();
-            int quantityToAllocate = orderQuantity - allocatedQuantity;
-
-            if(quantityOnHand >= quantityToAllocate)
-            {
-                quantityOnHand -= quantityToAllocate;
-                beerOrderLineDto.setQuantityAllocated(orderQuantity);
-                beerInventory.setQuantityOnHand(quantityOnHand);
-
-                beerInventoryRepository.save(beerInventory);
-            }else if(quantityOnHand > 0){
-               beerOrderLineDto.setQuantityAllocated(allocatedQuantity + quantityOnHand);
-               beerInventory.setQuantityOnHand(0);
-
-               beerInventoryRepository.delete(beerInventory);
-            }
         });
     }
 }

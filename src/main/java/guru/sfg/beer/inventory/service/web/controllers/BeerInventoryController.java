@@ -34,6 +34,6 @@ public class BeerInventoryController {
         return beerInventoryRepository.findAllByBeerId(beerId)
                 .stream()
                 .map(beerInventoryMapper::beerInventoryToBeerInventoryDto)
-                .toList();
+                .collect(Collectors.toList());
     }
 }
